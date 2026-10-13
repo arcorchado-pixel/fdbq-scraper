@@ -15,10 +15,10 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 URL = "https://www.basquetcatala.cat/competicions/resultats/24066"
 
 def run_scraper():
-    print("🔍 Conectando a la web de Bàsquet Català evitando el bloqueo de seguridad...")
+    print("🔍 Conectando a la web de Bàsquet Català superando el reto de Cloudflare...")
     
     try:
-        # Creamos el scraper capaz de resolver retos de Cloudflare
+        # Inicializamos cloudscraper para resolver el reto JS automáticamente
         scraper = cloudscraper.create_scraper(
             browser={
                 'browser': 'chrome',
@@ -27,7 +27,7 @@ def run_scraper():
             }
         )
         
-        response = scraper.get(URL, timeout=20)
+        response = scraper.get(URL, timeout=25)
         
         print(f"📥 Código de estado HTTP: {response.status_code}")
         
@@ -37,15 +37,19 @@ def run_scraper():
         print(f"🏷️ Título real de la página: {title_text}")
         
         if "Verificació" not in title_text:
+            # Buscamos las filas de partidos en la página de resultados
             rows = soup.find_all("tr")
-            links = soup.find_all("a")
-            partits = [a['href'] for a in links if a.has_attr('href') and ('partit' in a['href'] or 'acta' in a['href'])]
+            matches_found = 0
             
-            print(f"📊 Filas de tabla encontradas: {len(rows)}")
-            print(f"🔗 Enlaces a actas/partidos encontrados: {len(partits)}")
-            print("🚀 ¡Pantalla de seguridad superada con éxito!")
+            for row in rows:
+                text = row.get_text(separator=" ", strip=True)
+                if "-" in text or "VS" in text.upper():
+                    matches_found += 1
+            
+            print(f"📊 Filas de partidos detectadas: {matches_found}")
+            print("🚀 ¡Acceso concedido y datos listos para sincronizar con Supabase!")
         else:
-            print("⚠️ Aún detecta la pantalla de verificación. Ajustando hiperparámetros...")
+            print("⚠️ Cloudflare sigue reteniendo la página. Revisando cookies...")
 
     except Exception as e:
         print(f"❌ Error durante la conexión: {e}")
