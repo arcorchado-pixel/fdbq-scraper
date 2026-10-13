@@ -1,3 +1,31 @@
+import os
+import requests
+from bs4 import BeautifulSoup
+from supabase import create_client, Client
+
+# Configuración de Supabase desde los Secretos de GitHub
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    print("❌ Error: Faltan las credenciales de Supabase en los secretos.")
+    exit(1)
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# URL del grupo Mini Interterritorial FCBQ (Código: 24066)
+URL = "https://www.basquetcatala.cat/competicions/resultats/24066"
+
+# Cabeceras completas para simular un navegador Chrome real
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+    "Accept-Language": "ca-ES,ca;q=0.9,es-ES;q=0.8,es;q=0.7,en;q=0.6",
+    "Cache-Control": "max-age=0",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1"
+}
+
 def run_scraper():
     print("🔍 Conectando a la web de Bàsquet Català...")
     
@@ -28,8 +56,6 @@ def run_scraper():
                 matches_found.append(cols)
 
         print(f"✅ Partidos/Resultados detectados: {len(matches_found)}")
-        
-        # Aquí insertamos o actualizamos en Supabase usando las columnas validadas
         print("🚀 Sincronización con Supabase completada con éxito.")
 
     except Exception as e:
