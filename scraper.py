@@ -1,7 +1,7 @@
 import os
-import cloudscraper
 from bs4 import BeautifulSoup
 from supabase import create_client, Client
+from curl_cffi import requests as cffi_requests
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
@@ -15,29 +15,20 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 URL = "https://www.basquetcatala.cat/competicions/resultats/24066"
 
 def run_scraper():
-    print("🔍 Conectando a la web de Bàsquet Català superando el reto de Cloudflare...")
+    print("🔍 Conectando a la web de Bàsquet Català con suplantación TLS (curl_cffi)...")
     
     try:
-        # Inicializamos cloudscraper para resolver el reto JS automáticamente
-        scraper = cloudscraper.create_scraper(
-            browser={
-                'browser': 'chrome',
-                'platform': 'windows',
-                'desktop': True
-            }
-        )
-        
-        response = scraper.get(URL, timeout=25)
+        # Hacemos la petición simulando el navegador Chrome exacto a nivel de red
+        response = cffi_requests.get(URL, impersonate="chrome120", timeout=25)
         
         print(f"📥 Código de estado HTTP: {response.status_code}")
         
         soup = BeautifulSoup(response.text, "html.parser")
         title = soup.find('title')
         title_text = title.text.strip() if title else 'No encontrado'
-        print(f"🏷️ Título real de la página: {title_text}")
+        print(f"🏷️ Título de la página: {title_text}")
         
         if "Verificació" not in title_text:
-            # Buscamos las filas de partidos en la página de resultados
             rows = soup.find_all("tr")
             matches_found = 0
             
@@ -47,9 +38,9 @@ def run_scraper():
                     matches_found += 1
             
             print(f"📊 Filas de partidos detectadas: {matches_found}")
-            print("🚀 ¡Acceso concedido y datos listos para sincronizar con Supabase!")
+            print("🚀 ¡Barrera de Cloudflare superada con éxito total!")
         else:
-            print("⚠️ Cloudflare sigue reteniendo la página. Revisando cookies...")
+            print("⚠️ Cloudflare sigue bloqueando el acceso desde GitHub Actions.")
 
     except Exception as e:
         print(f"❌ Error durante la conexión: {e}")
