@@ -17,11 +17,9 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-
-      - name: Instalar librerías necesarias
-        run: |
-          pip install requests beautifulsoup4 supabase
-
+      -- name: Instalar librerías necesarias
+      run: |
+        pip install -r requirements.txt
       - name: Ejecutar Scraper
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
