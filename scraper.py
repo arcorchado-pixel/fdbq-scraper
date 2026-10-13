@@ -16,14 +16,10 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # URL del grupo Mini Interterritorial FCBQ (Código: 24066)
 URL = "https://www.basquetcatala.cat/competicions/resultats/24066"
 
-# Cabeceras completas para simular un navegador Chrome real
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-    "Accept-Language": "ca-ES,ca;q=0.9,es-ES;q=0.8,es;q=0.7,en;q=0.6",
-    "Cache-Control": "max-age=0",
-    "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1"
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "ca-ES,ca;q=0.9,es-ES;q=0.8",
 }
 
 def run_scraper():
@@ -40,23 +36,17 @@ def run_scraper():
 
         soup = BeautifulSoup(response.text, "html.parser")
         
-        # Seleccionar todas las filas de tablas dentro de la página
-        rows = soup.find_all("tr")
-        print(f"📊 Filas encontradas para analizar: {len(rows)}")
+        # Buscar todos los enlaces, div y tablas para detectar la estructura de partidos
+        links = soup.find_all("a")
+        partits_links = [a['href'] for a in links if a.has_attr('href') and ('partit' in a['href'] or 'acta' in a['href'])]
+        
+        containers = soup.select("div[class*='partit'], div[class*='match'], .row, table")
+        
+        print(f"📊 Enlaces de partidos/actas encontrados: {len(partits_links)}")
+        print(f"📊 Contenedores de datos encontrados: {len(containers)}")
 
-        category_name = "Mini Interterritorial"
-        matches_found = []
-
-        for row in rows:
-            text = row.get_text(separator=" ", strip=True)
-            cols = [td.get_text(strip=True) for td in row.find_all(["td", "th"])]
-            
-            # Filtramos filas que tengan contenido de partidos o marcadores
-            if len(cols) >= 2 and ("-" in text or "VS" in text.upper()):
-                matches_found.append(cols)
-
-        print(f"✅ Partidos/Resultados detectados: {len(matches_found)}")
-        print("🚀 Sincronización con Supabase completada con éxito.")
+        # Mapeo a las tablas de Supabase
+        print("🚀 Análisis de estructura completado con éxito.")
 
     except Exception as e:
         print(f"❌ Error durante la extracción: {e}")
